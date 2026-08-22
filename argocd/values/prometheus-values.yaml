@@ -30,6 +30,21 @@ grafana:
     limits:
       cpu: 250m
       memory: 512Mi
+  readinessProbe:
+    httpGet:
+      path: /api/health
+      port: grafana
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    failureThreshold: 10
+  livenessProbe:
+    httpGet:
+      path: /api/health
+      port: grafana
+    initialDelaySeconds: 90
+    periodSeconds: 10
+    timeoutSeconds: 30
+    failureThreshold: 15
 
 kube-state-metrics:
   resources:
