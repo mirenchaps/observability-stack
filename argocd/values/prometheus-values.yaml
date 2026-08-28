@@ -3,6 +3,9 @@ prometheusOperator:
     enabled: false
 
 prometheus:
+  service: 
+    type: NodePort
+    nodePort: 30090
   prometheusSpec:
     resources:
       requests:
@@ -23,6 +26,9 @@ alertmanager:
         memory: 128Mi
 
 grafana:
+  service: 
+    type: NodePort
+    nodePort: 30030
   resources:
     requests:
       cpu: 100m
