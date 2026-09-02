@@ -1,0 +1,63 @@
+# SingleBinary is the only mode that works without object storage --
+# SimpleScalable (the chart default) requires S3.
+deploymentMode: SingleBinary
+
+loki:
+  # Single-tenant. Left true, every query needs an X-Scope-OrgID header.
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: filesystem
+  # The chart ships schemaConfig empty and a real install will not work without it.
+  schemaConfig:
+    configs:
+      - from: "2024-04-01"
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+  limits_config:
+    retention_period: 168h
+  # Retention is only enforced if the compactor is told to do it.
+  compactor:
+    retention_enabled: true
+    delete_request_store: filesystem
+
+singleBinary:
+  replicas: 1
+  persistence:
+    enabled: true
+    storageClass: local-path
+    size: 20Gi
+    # Chart default deletes the PVC with the StatefulSet.
+    whenDeleted: Retain
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+# SimpleScalable components default to 3 replicas each and are unused here.
+backend:
+  replicas: 0
+read:
+  replicas: 0
+write:
+  replicas: 0
+
+# All default to enabled and are unnecessary at this scale.
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false
+lokiCanary:
+  enabled: false
+gateway:
+  enabled: false
+test:
+  enabled: false
