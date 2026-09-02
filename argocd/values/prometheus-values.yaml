@@ -24,6 +24,22 @@ alertmanager:
       limits:
         cpu: 100m
         memory: 128Mi
+    secrets:
+      - alertmanager-slack
+  config:
+    route:
+      receiver: 'slack'
+      routes:
+        - receiver: 'null'
+          matchers:
+            - alertname = "Watchdog"
+    receivers:
+      - name: 'null'
+      - name: 'slack'
+        slack_configs:
+          - api_url_file: /etc/alertmanager/secrets/alertmanager-slack/webhook-url
+            channel: '#home-lab-alerts'
+            send_resolved: true
 
 grafana:
   service: 
