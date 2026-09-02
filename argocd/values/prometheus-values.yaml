@@ -2,6 +2,15 @@ prometheusOperator:
   admissionWebhooks:
     enabled: false
 
+# k3s runs these embedded in the k3s binary, not as separate scrapeable
+# Services -- left enabled they permanently fire *Down critical alerts.
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
 prometheus:
   service: 
     type: NodePort
@@ -33,6 +42,9 @@ alertmanager:
         - receiver: 'null'
           matchers:
             - alertname = "Watchdog"
+        - receiver: 'null'
+          matchers:
+            - severity = "info"
     receivers:
       - name: 'null'
       - name: 'slack'
