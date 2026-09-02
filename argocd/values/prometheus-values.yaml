@@ -19,10 +19,21 @@ prometheus:
     resources:
       requests:
         cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 500m
         memory: 1Gi
+      limits:
+        cpu: 1000m
+        memory: 3Gi
+    # Without this the TSDB sits on an emptyDir and every metric is lost
+    # whenever the pod is rescheduled. local-path is node-local, so this also
+    # pins Prometheus to whichever node the PV is created on.
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 30Gi
 
 alertmanager:
   alertmanagerSpec:
@@ -33,6 +44,15 @@ alertmanager:
       limits:
         cpu: 100m
         memory: 128Mi
+    # Silences and notification state are lost on restart without this.
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
     secrets:
       - alertmanager-slack
   config:
@@ -57,13 +77,20 @@ grafana:
   service: 
     type: NodePort
     nodePort: 30030
+  # Was OOMKilled repeatedly at 512Mi.
   resources:
     requests:
       cpu: 100m
       memory: 256Mi
     limits:
       cpu: 250m
-      memory: 512Mi
+      memory: 1Gi
+  persistence:
+    enabled: true
+    type: pvc
+    storageClassName: local-path
+    accessModes: ["ReadWriteOnce"]
+    size: 5Gi
   readinessProbe:
     httpGet:
       path: /api/health
