@@ -91,6 +91,13 @@ grafana:
     storageClassName: local-path
     accessModes: ["ReadWriteOnce"]
     size: 5Gi
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      uid: loki
+      # gateway is disabled, so this points at the single-binary Service directly.
+      url: http://loki.monitoring.svc.cluster.local:3100
+      access: proxy
   readinessProbe:
     httpGet:
       path: /api/health
