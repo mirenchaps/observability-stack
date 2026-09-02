@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: pod-restart-churn
+  namespace: monitoring
+  labels:
+    # Must match the Prometheus CR's ruleSelector or the operator ignores this file.
+    release: prometheus
+spec:
+  groups:
+    - name: pod-restart-churn
+      rules:
+        # The built-in KubePodCrashLooping only fires on 15 minutes of *sustained*
+        # CrashLoopBackOff, so pods that crash and recover repeatedly never trigger it.
+        - alert: PodRestartingFrequently
+          expr: increase(kube_pod_container_status_restarts_total[1h]) > 3
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.namespace }}/{{ $labels.pod }} is restarting repeatedly"
+            description: >-
+              Container {{ $labels.container }} in {{ $labels.namespace }}/{{ $labels.pod }}
+              has restarted {{ $value | printf "%.0f" }} times in the last hour.
+
+        - alert: ContainerOOMKilled
+          expr: kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.namespace }}/{{ $labels.pod }} was OOMKilled"
+            description: >-
+              Container {{ $labels.container }} in {{ $labels.namespace }}/{{ $labels.pod }}
+              hit its memory limit and was killed. Raise the limit or find the leak.
