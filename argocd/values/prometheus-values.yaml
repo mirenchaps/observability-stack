@@ -57,11 +57,18 @@ alertmanager:
       - alertmanager-slack
   config:
     route:
+      # Grouping by namespace alone put the namespace in the message title
+      # instead of the problem. alertname first makes the subject readable.
+      group_by: ['alertname', 'namespace']
       receiver: 'slack'
       routes:
         - receiver: 'null'
           matchers:
             - alertname = "Watchdog"
+        # Internal helper alert used to suppress others -- never actionable.
+        - receiver: 'null'
+          matchers:
+            - alertname = "InfoInhibitor"
         - receiver: 'null'
           matchers:
             - severity = "info"
@@ -72,6 +79,15 @@ alertmanager:
           - api_url_file: /etc/alertmanager/secrets/alertmanager-slack/webhook-url
             channel: '#home-lab-alerts'
             send_resolved: true
+            # The default template prints only group labels, which says nothing
+            # about what is actually wrong.
+            title: '{{ .Status | toUpper }}{{ if eq .Status "firing" }} x{{ .Alerts.Firing | len }}{{ end }} — {{ .CommonLabels.alertname }}'
+            text: |-
+              {{ range .Alerts -}}
+              *{{ .Annotations.summary }}*
+              {{ .Annotations.description }}
+              severity: {{ .Labels.severity }}{{ with .Labels.namespace }} · ns: {{ . }}{{ end }}{{ with .Labels.pod }} · pod: {{ . }}{{ end }}
+              {{ end }}
 
 grafana:
   service: 
