@@ -81,12 +81,34 @@ alertmanager:
             send_resolved: true
             # The default template prints only group labels, which says nothing
             # about what is actually wrong.
-            title: '{{ .Status | toUpper }}{{ if eq .Status "firing" }} x{{ .Alerts.Firing | len }}{{ end }} — {{ .CommonLabels.alertname }}'
+            color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+            title: '{{ .Status | toUpper }} — {{ .CommonLabels.alertname }}'
+            # Chart rules carry runbook_url; it explains the alert in prose.
+            title_link: '{{ .CommonAnnotations.runbook_url }}'
+            fields:
+              - title: Severity
+                value: '{{ .CommonLabels.severity }}'
+                short: true
+              - title: Alerts firing
+                value: '{{ .Alerts.Firing | len }}'
+                short: true
             text: |-
-              {{ range .Alerts -}}
-              *{{ .Annotations.summary }}*
+              {{ range .Alerts }}
+              *What it means*
+              {{ .Annotations.summary }}
+
+              *Detail*
               {{ .Annotations.description }}
-              severity: {{ .Labels.severity }}{{ with .Labels.namespace }} · ns: {{ . }}{{ end }}{{ with .Labels.pod }} · pod: {{ . }}{{ end }}
+
+              *Where*
+              {{ with .Labels.namespace }}namespace `{{ . }}`{{ end }}{{ with .Labels.pod }}
+              pod `{{ . }}`{{ end }}{{ with .Labels.instance }}
+              instance `{{ . }}`{{ end }}{{ with .Labels.node }}
+              node `{{ . }}`{{ end }}
+              {{ with .Annotations.runbook_url }}
+              *How to investigate*
+              {{ . }}
+              {{ end }}
               {{ end }}
 
 grafana:
