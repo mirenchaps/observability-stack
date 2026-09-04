@@ -90,11 +90,10 @@ alertmanager:
 
               {{ .Annotations.description }}
 
-              *Severity:* `{{ .Labels.severity | toUpper }}`
-              {{ with .Labels.namespace }}*Namespace:* `{{ . }}`{{ end }}
-              {{ with .Labels.pod }}*Pod:* `{{ . }}`{{ end }}
-              {{ with .Labels.node }}*Node:* `{{ . }}`{{ end }}
-              {{ with .Labels.instance }}*Instance:* `{{ . }}`{{ end }}
+              *Severity:* `{{ .Labels.severity | toUpper }}`{{ with .Labels.namespace }}
+              *Namespace:* `{{ . }}`{{ end }}{{ with .Labels.pod }}
+              *Pod:* `{{ . }}`{{ end }}{{ with .Labels.node }}
+              *Node:* `{{ . }}`{{ end }}
 
               {{ with .Annotations.runbook_url }}<{{ . }}|Open runbook>{{ end }}
 

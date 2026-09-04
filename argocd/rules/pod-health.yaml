@@ -33,3 +33,23 @@ spec:
             description: >-
               Container {{ $labels.container }} in {{ $labels.namespace }}/{{ $labels.pod }}
               hit its memory limit and was killed. Raise the limit or find the leak.
+
+        - alert: ContainerMemoryNearLimit
+          expr: |-
+            (
+              sum by (namespace, pod, container) (
+                container_memory_working_set_bytes{container!="",container!="POD"}
+              )
+              /
+              max by (namespace, pod, container) (
+                kube_pod_container_resource_limits{resource="memory",unit="byte"} > 0
+              )
+            ) > 0.85
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.namespace }}/{{ $labels.pod }} is near its memory limit"
+            description: >-
+              Container {{ $labels.container }} in {{ $labels.namespace }}/{{ $labels.pod }}
+              has used {{ $value | humanizePercentage }} of its memory limit for 15 minutes.
