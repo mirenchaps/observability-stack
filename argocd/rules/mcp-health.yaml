@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mcp-health
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: mcp-health
+      rules:
+        - alert: MCPHealthProbeFailed
+          expr: probe_success{app="home-network-mcp-server",probe="mcp-health"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: MCP health endpoint is unreachable
+            description: >-
+              Blackbox Exporter has been unable to reach the
+              home-network-mcp-server /health endpoint for two minutes.
