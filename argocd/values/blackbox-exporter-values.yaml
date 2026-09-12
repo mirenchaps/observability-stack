@@ -1,0 +1,24 @@
+replicas: 1
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi
+
+serviceMonitor:
+  enabled: true
+  defaults:
+    labels:
+      release: prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+    module: http_2xx
+  targets:
+    - name: home-network-mcp-server-health
+      url: http://home-network-mcp-server.default.svc.cluster.local:8001/health
+      labels:
+        app: home-network-mcp-server
+        probe: mcp-health
