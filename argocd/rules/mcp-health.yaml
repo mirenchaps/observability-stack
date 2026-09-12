@@ -10,7 +10,7 @@ spec:
     - name: mcp-health
       rules:
         - alert: MCPHealthProbeFailed
-          expr: probe_success{app="home-network-mcp-server",probe="mcp-health"} == 0
+          expr: probe_success{target="home-network-mcp-server-health"} == 0
           for: 2m
           labels:
             severity: critical
