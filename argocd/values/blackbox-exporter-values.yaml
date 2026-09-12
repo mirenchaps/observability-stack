@@ -22,3 +22,4 @@ serviceMonitor:
       labels:
         app: home-network-mcp-server
         probe: mcp-health
+        release: prometheus
