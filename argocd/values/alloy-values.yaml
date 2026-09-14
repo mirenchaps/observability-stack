@@ -32,11 +32,43 @@ alloy:
         forward_to = [loki.write.default.receiver]
       }
 
+      loki.relabel "journal" {
+        forward_to = []
+
+        rule {
+          source_labels = ["__journal__systemd_unit"]
+          target_label  = "unit"
+        }
+        rule {
+          source_labels = ["__journal__hostname"]
+          target_label  = "hostname"
+        }
+        rule {
+          source_labels = ["__journal_priority_keyword"]
+          target_label  = "level"
+        }
+      }
+
+      loki.source.journal "system" {
+        forward_to    = [loki.write.default.receiver]
+        relabel_rules = loki.relabel.journal.rules
+        labels        = {source = "journal"}
+        max_age       = "1h"
+      }
+
+      loki.source.kubernetes_events "events" {
+        forward_to = [loki.write.default.receiver]
+        job_name   = "kubernetes-events"
+        log_format = "json"
+      }
+
       loki.write "default" {
         endpoint {
           url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
         }
       }
+  mounts:
+    varlog: true
   resources:
     requests:
       cpu: 50m
