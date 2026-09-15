@@ -1,0 +1,37 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: node-state
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: node-state
+      rules:
+        # Node is hardcoded: kube-state-metrics does not expose node labels without an allowlist.
+        - alert: GPUNodeTaintMissing
+          expr: |
+            kube_node_info{node="k3s-ai"}
+            unless on (node)
+            kube_node_spec_taint{node="k3s-ai", key="workload", value="ml", effect="NoSchedule"}
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: k3s-ai has lost its workload=ml:NoSchedule taint
+            description: >-
+              The GPU node is registered but untainted, so any pod without a
+              toleration can schedule onto it. Re-apply the taint.
+
+        - alert: NvidiaDevicePluginNotScheduled
+          expr: kube_daemonset_status_desired_number_scheduled{namespace="nvidia-device-plugin", daemonset="nvidia-device-plugin"} == 0
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: nvidia-device-plugin matches zero nodes
+            description: >-
+              The device plugin DaemonSet has no nodes to run on, so no GPU is
+              advertised and GPU workloads cannot schedule. Usually the
+              workload=ml label is missing from k3s-ai.
