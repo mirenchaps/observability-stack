@@ -10,6 +10,18 @@ kubeScheduler:
   enabled: false
 kubeProxy:
   enabled: false
+# k3s defaults to SQLite, so this ServiceMonitor has never had a target to scrape.
+kubeEtcd:
+  enabled: false
+
+kubelet:
+  serviceMonitor:
+    # k3s serves apiserver metrics on the kubelet endpoint too, so these histograms
+    # are scraped twice; the apiserver job keeps the copy dashboards and SLO rules use.
+    metricRelabelings:
+      - sourceLabels: [__name__]
+        regex: '(apiserver|etcd)_.*_bucket'
+        action: drop
 
 prometheus:
   service: 
