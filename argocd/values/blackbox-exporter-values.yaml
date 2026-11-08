@@ -1,3 +1,7 @@
+# Keo engine test, reverted right after: tag does not exist.
+image:
+  tag: v0.0.0-keo-engine-test
+
 replicas: 1
 
 resources:
